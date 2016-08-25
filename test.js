@@ -1,10 +1,10 @@
 import test from 'ava'
 import recaller, {
   constantBackoff,
-  exponentialBackoff // ,
-  // fullJitterBackoff,
-  // equalJitterBackoff,
-  // decorrelatedJitterBackoff
+  exponentialBackoff,
+  fullJitterBackoff,
+  equalJitterBackoff,
+  decorrelatedJitterBackoff
 } from './'
 
 test('function should not be retried if async function is ok', async t => {
@@ -80,6 +80,7 @@ test('bailing should work (nothing provided)', async t => {
   try {
     await recaller(async (bail) => {
       bail()
+      throw new Error('well')
     })
     t.fail('did not throw')
   } catch (err) {
@@ -204,7 +205,7 @@ test('backoff (constant)', async t => {
     await recaller(async () => {
       if (lastDelay) {
         const duration = Date.now() - lastDelay
-        t.is((duration > 200 && duration < 500), true)
+        t.is((duration > 200), true)
       }
       lastDelay = Date.now()
       throw new Error('fail')
@@ -220,23 +221,204 @@ test('backoff (constant)', async t => {
 test('constantBackoff', t => {
   t.plan(4)
 
+  // default values
   const cb1 = constantBackoff()
   t.is(cb1(1), 5000)
   t.is(cb1(2), 5000)
 
+  // custom ms
   const cb2 = constantBackoff(300)
   t.is(cb2(1), 300)
   t.is(cb2(2), 300)
 })
 
 test('exponentialBackoff', t => {
-  t.plan(3)
+  t.plan(12)
 
   // default values
   const eb1 = exponentialBackoff()
   t.is(eb1(1), 1000)
   t.is(eb1(2), 2000)
   t.is(eb1(3), 4000)
+
+  // custom base
+  const eb2 = exponentialBackoff({base: 500})
+  t.is(eb2(1), 500)
+  t.is(eb2(2), 1000)
+  t.is(eb2(3), 2000)
+
+  // custom cap
+  const eb3 = exponentialBackoff({cap: 3000})
+  t.is(eb3(1), 1000)
+  t.is(eb3(2), 2000)
+  t.is(eb3(3), 3000)
+
+  // custom factor
+  const eb4 = exponentialBackoff({factor: 1})
+  t.is(eb4(1), 1000)
+  t.is(eb4(2), 1000)
+  t.is(eb4(3), 1000)
 })
 
-// TODO: Other backoff tests
+test('fullJitterBackoff', t => {
+  t.plan(6 * 10000)
+
+  // default values
+  const fjb1 = fullJitterBackoff()
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb1(1)
+    t.is((
+      val <= 1000 &&
+      val >= 0
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb1(2)
+    t.is((
+      val <= 2000 &&
+      val >= 0
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb1(3)
+    t.is((
+      val <= 4000 &&
+      val >= 0
+    ), true)
+  }
+
+  // custom values
+  const fjb2 = fullJitterBackoff({cap: 2000, base: 500})
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb2(1)
+    t.is((
+      val <= 500 &&
+      val >= 0
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb2(2)
+    t.is((
+      val <= 1000 &&
+      val >= 0
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = fjb2(1)
+    t.is((
+      val <= 2000 &&
+      val >= 0
+    ), true)
+  }
+})
+
+test('equalJitterBackoff', t => {
+  t.plan(6 * 10000)
+
+  // default values
+  const ejb1 = equalJitterBackoff()
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb1(1)
+    t.is((
+      val <= 1000 &&
+      val >= 500
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb1(2)
+    t.is((
+      val <= 2000 &&
+      val >= 1000
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb1(3)
+    t.is((
+      val <= 4000 &&
+      val >= 2000
+    ), true)
+  }
+
+  // custom values
+  const ejb2 = equalJitterBackoff({cap: 2000, base: 500})
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb2(1)
+    t.is((
+      val <= 500 &&
+      val >= 250
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb2(2)
+    t.is((
+      val <= 1000 &&
+      val >= 500
+    ), true)
+  }
+
+  for (let i = 0; i < 10000; i++) {
+    const val = ejb2(3)
+    t.is((
+      val <= 2000 &&
+      val >= 1000
+    ), true)
+  }
+})
+
+test('decorrelatedJitterBackoff', t => {
+  t.plan(4 * 10000)
+
+  // Default options, first value
+  for (let i = 0; i < 10000; i++) {
+    const gen = decorrelatedJitterBackoff()
+    const val = gen()
+    t.is((
+      val >= 1000 &&
+      val <= 3000
+    ), true)
+  }
+
+  // Default options, second value
+  for (let i = 0; i < 10000; i++) {
+    const gen = decorrelatedJitterBackoff()
+    gen() // generate first
+    const val = gen()
+    t.is((
+      val >= 1000 &&
+      val <= 9000
+    ), true)
+  }
+
+  // Capped (otherwise default), third value
+  for (let i = 0; i < 10000; i++) {
+    const gen = decorrelatedJitterBackoff({cap: 24000})
+    gen() // generate first
+    gen() // generate second
+    const val = gen()
+    t.is((
+      val >= 1000 &&
+      val <= 24000
+    ), true)
+  }
+
+  // times 4, first value
+  for (let i = 0; i < 10000; i++) {
+    const gen = decorrelatedJitterBackoff({times: 4})
+    const val = gen()
+    t.is((
+      val >= 1000 &&
+      val <= 4000
+    ), true)
+  }
+})
