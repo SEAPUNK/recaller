@@ -105,4 +105,25 @@ function constantBackoff (ms) {
 handling retries
 ---
 
-TODO
+You can intercept each retry attempt, by providing a middleware function. in `opts.onretry`.
+
+```js
+import recaller from 'recaller'
+
+export default function doSomething () {
+  return await recaller(async () => {
+    const res = await fetch('https://google.com')
+  }, {
+    onretry: function (err, attempt, delayTime) {
+      // Prevent retries; reject the recaller with the last error
+      if (err instanceof TypeError) throw err
+
+      // err is the error of the attempt
+      // attempt is the attempt #. If the first call failed, then attempt = 1.
+      // delayTime is how long we will wait before next attempt.
+
+      logger.warn(`doSomething attempt ${attempt} failed (will wait ${delayTime} ms before trying again: ${err.stack}`)
+    }
+  })
+}
+```
