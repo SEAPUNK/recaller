@@ -27,6 +27,7 @@
   "devDependencies": {
     "ava": "^0.15.2",
     "babel-eslint": "^6.1.2",
+    "coveralls": "^2.11.12",
     "nyc": "^7.0.0",
     "rimraf": "^2.5.4",
     "standard": "^7.1.2"
