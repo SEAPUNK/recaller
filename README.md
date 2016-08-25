@@ -68,7 +68,7 @@ Calls provided (async or regular) function, and retries on failure.
 backoffs
 ---
 
-`recaller` doesn't backoff (or wait before retrying) by default. To specify backoff, you must give it a "backoff generator" in the options (`opts.backoff`).
+`recaller` doesn't backoff (wait before retrying) by default. To specify backoff, you must give it a "backoff generator" in the options (`opts.backoff`).
 
 example:
 
