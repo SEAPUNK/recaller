@@ -75,12 +75,14 @@ example:
 ```js
 import recaller, {constantBackoff} from 'recaller'
 
-recaller(async () => {
-  const res = await fetch('https://google.com')
-}, {
-  // on every failure, wait 5 seconds before retrying
-  backoff: constantBackoff(5000)
-})
+export default function doSomething () {
+  return await recaller(async () => {
+    const res = await fetch('https://google.com')
+  }, {
+    // on every failure, wait 5 seconds before retrying
+    backoff: constantBackoff(5000)
+  })
+}
 ```
 
 A backoff generator is a function that returns the next delay to wait in milliseconds. For example, the full `constantBackoff(ms)` generator is below:
