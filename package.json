@@ -1,6 +1,6 @@
 {
   "name": "recaller",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Promise-based function retry utility.",
   "main": "lib/index.js",
   "scripts": {
