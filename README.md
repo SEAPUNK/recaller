@@ -105,7 +105,7 @@ function constantBackoff (ms) {
 handling retries
 ---
 
-You can intercept each retry attempt, by providing a middleware function. in `opts.onretry`.
+You can intercept each retry attempt, by providing a middleware function in `opts.onretry`.
 
 ```js
 import recaller from 'recaller'
