@@ -122,7 +122,10 @@ export default function doSomething () {
       // attempt is the attempt #. If the first call failed, then attempt = 1.
       // delayTime is how long we will wait before next attempt.
 
-      logger.warn(`doSomething attempt ${attempt} failed (will wait ${delayTime} ms before trying again: ${err.stack}`)
+      logger.warn(`doSomething attempt ${attempt} failed;
+        will wait ${delayTime} ms before trying again.
+        error: ${err.stack}
+      `)
     }
   })
 }
