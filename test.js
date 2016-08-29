@@ -196,6 +196,33 @@ test('onretry, called (backoff)', async t => {
   }
 })
 
+test('onretry, error throwing', async t => {
+  t.plan(2)
+
+  let thrown = false
+
+  try {
+    await recaller(async (bail, attempt) => {
+      if (thrown) return bail(new Error('was thrown'))
+      if (attempt === 3) {
+        throw new TypeError('type error')
+      }
+      throw new Error('normal error')
+    }, {
+      onretry: function (err, attempt, delayTime) {
+        if (err instanceof TypeError) {
+          t.is(thrown, false)
+          thrown = true
+          throw err
+        }
+      }
+    })
+    t.fail('did not throw')
+  } catch (err) {
+    t.is(err.message, 'type error')
+  }
+})
+
 test('backoff (constant)', async t => {
   t.plan(2)
 
