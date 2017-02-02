@@ -1,6 +1,8 @@
 recaller
 ===
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/SEAPUNK/recaller.svg)](https://greenkeeper.io/)
+
 [![npm version](https://img.shields.io/npm/v/recaller.svg?style=flat-square)](https://npmjs.com/package/recaller)
 [![javascript standard style](https://img.shields.io/badge/code%20style-standard-blue.svg?style=flat-square)](http://standardjs.com/)
 [![travis build](https://img.shields.io/travis/SEAPUNK/recaller/master.svg?style=flat-square)](https://travis-ci.org/SEAPUNK/recaller)
